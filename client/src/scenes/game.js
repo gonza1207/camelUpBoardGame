@@ -2,6 +2,7 @@ import io from 'socket.io-client';
 import TerrainCard from "../helpers/terrain_card";
 import Zone from '../helpers/zone';
 import Pyramid from '../helpers/pyramid';
+import Camel from '../helpers/camel';
 
 export default class Game extends Phaser.Scene {
 
@@ -9,12 +10,17 @@ export default class Game extends Phaser.Scene {
         super({
             key: 'Game'
         });
+        this.camelsPosition = [];
+        this.camels = [];
+        this.zones = [];
+
         this.pyramid = new Pyramid(this);
         this.terrainCard = new TerrainCard(this);
     }
 
     preload() {
         this.load.image('board', 'src/assets/board.png');
+        this.load.image('camel', 'src/assets/camel_token.png');
         this.pyramid.preload();
         this.terrainCard.preload();
     }
@@ -23,19 +29,24 @@ export default class Game extends Phaser.Scene {
         let self = this;
         this.isPlayerA = false;
         this.opponentCards = [];
-        var sprite = this.add.sprite(0, 0, 'board').setOrigin(0);
+        this.add.sprite(0, 0, 'board').setOrigin(0);
+
+        this.camels['blue'] = new Camel(this);
 
         this.pyramid.create();
         this.terrainCard.create();
-        this.socket = io('http://localhost:3000');
 
+        for (let i = 0; i < 5; i++) {
+            this.zones[i] = new Zone(this, 20 + i * 160, 30);
+        }
+          
+    
         
-          this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
+        this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
             gameObject.x = dragX;
             gameObject.y = dragY;
         })
 
-        this.zone = new Zone(this);
 
         this.input.on('dragend', function (pointer, gameObject, dropped) {
             
@@ -154,9 +165,28 @@ export default class Game extends Phaser.Scene {
             self.socket.emit("diceThrown", "player1");
         }
 
-        this.socket.on('serverThrowDice', function () {
+        this.socket = io('http://localhost:3000');
+
+        this.socket.on('serverThrowDice', function (diceThrow) {
             console.log("serverThrowDice");
+            let camel = self.camels[diceThrow[0]];
+            if (camel != undefined) {
+            camel.position += diceThrow[1];
+            let zone = self.zones[camel.position];
+            console.log("x y " + zone.x + "-" + zone.y);
+            camel.sprite.x = zone.x;
+            camel.sprite.y = zone.y;
+            camel.sprite.visible = true;
+            self.children.bringToTop(camel.sprite);
+        }
         })
+
+
+        this.socket.on('camelsPosition', function (camelsPosition) {
+            this.camelsPosition = camelsPosition;
+            console.log("camelsPosition");
+        })
+
     }
 
     update() {
