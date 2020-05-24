@@ -6,9 +6,6 @@ Thumbs.db
 *.sublime-project
 *.sublime-workspace
 
-# Visual studio code
-.vs
-
 # Vendors
 node_modules/
 
