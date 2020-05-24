@@ -10,12 +10,13 @@ export default class Game extends Phaser.Scene {
             key: 'Game'
         });
         this.pyramid = new Pyramid(this);
+        this.terrainCard = new TerrainCard(this);
     }
 
     preload() {
-        this.pyramid.preload();
         this.load.image('board', 'src/assets/board.png');
-        this.load.image('terrainBack', 'src/assets/terrain_back.png');
+        this.pyramid.preload();
+        this.terrainCard.preload();
     }
 
     create() {
@@ -23,8 +24,9 @@ export default class Game extends Phaser.Scene {
         this.isPlayerA = false;
         this.opponentCards = [];
         var sprite = this.add.sprite(0, 0, 'board').setOrigin(0);
-        this.terrainCard = new TerrainCard(this);
+
         this.pyramid.create();
+        this.terrainCard.create();
         this.socket = io('http://localhost:3000');
 
         
@@ -36,6 +38,7 @@ export default class Game extends Phaser.Scene {
         this.zone = new Zone(this);
 
         this.input.on('dragend', function (pointer, gameObject, dropped) {
+            
             //gameObject.setTint();
             self.children.bringToTop(gameObject);
             if (!dropped) {
